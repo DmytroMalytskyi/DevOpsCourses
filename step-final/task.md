@@ -2,7 +2,7 @@
  - test python backend server. Just script which listening on some port and respond 200 on /
  - Dockerfile with everything needed to run this script
  - GitHub action which will build docker image automatically and push to docker hub. Use Github secrets to store your docker hub creds
-2. Write terraform code to create EKS cluster
+2. Write terraform code to create EKS cluster (https://gitlab.com/dan-it/groups/devops_soft/-/tree/main/step-final/EKS?ref_type=heads)
  - one node group with one node
  - nginx ingress controller
 3. Write terraform code which will install ArgoCD to EKS using helm chart or raw k8s manifest
