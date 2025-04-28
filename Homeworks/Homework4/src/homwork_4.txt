@@ -1,0 +1,138 @@
+root@dmytro:~# adduser bob
+info: Adding user `bob' ...
+info: Selecting UID/GID from range 1000 to 59999 ...
+info: Adding new group `bob' (1001) ...
+info: Adding new user `bob' (1001) with group `bob (1001)' ...
+info: Creating home directory `/home/bob' ...
+info: Copying files from `/etc/skel' ...
+New password:
+Retype new password:
+passwd: password updated successfully
+Changing the user information for bob
+Enter the new value, or press ENTER for the default
+        Full Name []:
+        Room Number []:
+        Work Phone []:
+        Home Phone []:
+        Other []:
+Is the information correct? [Y/n] Y
+info: Adding new user `bob' to supplemental / extra groups `users' ...
+info: Adding user `bob' to group `users' ...
+
+root@dmytro:~# usermod -aG sudo bob
+
+root@dmytro:~# cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin
+systemd-timesync:x:997:997:systemd Time Synchronization:/:/usr/sbin/nologin
+dhcpcd:x:100:65534:DHCP Client Daemon,,,:/usr/lib/dhcpcd:/bin/false
+messagebus:x:101:102::/nonexistent:/usr/sbin/nologin
+systemd-resolve:x:992:992:systemd Resolver:/:/usr/sbin/nologin
+pollinate:x:102:1::/var/cache/pollinate:/bin/false
+polkitd:x:991:991:User for polkitd:/:/usr/sbin/nologin
+syslog:x:103:104::/nonexistent:/usr/sbin/nologin
+uuidd:x:104:105::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:105:107::/nonexistent:/usr/sbin/nologin
+tss:x:106:108:TPM software stack,,,:/var/lib/tpm:/bin/false
+landscape:x:107:109::/var/lib/landscape:/usr/sbin/nologin
+fwupd-refresh:x:989:989:Firmware update daemon:/var/lib/fwupd:/usr/sbin/nologin
+usbmux:x:108:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+sshd:x:109:65534::/run/sshd:/usr/sbin/nologin
+dmytro:x:1000:1000:dmytro:/home/dmytro:/bin/bash
+bob:x:1001:1001:,,,:/home/bob:/bin/bash
+root@dmytro:~# id 1001
+uid=1001(bob) gid=1001(bob) groups=1001(bob),27(sudo),100(users)reboot
+
+root@dmytro:~# sudo chown bob:bob /home/bob/ch_hostname.sh
+root@dmytro:~# chmod 700 /home/bob/ch_hostname.sh
+
+root@dmytro:~# sudo -u bob bash -c "mkdir -p /home/bob && touch /home/bob/cahnge_hostname.sh"
+
+root@dmytro:~# nano /home/bob/cahnge_hostname.sh
+
+root@dmytro:~# mv /home/bob/cahnge_hostname.sh /home/bob/ch_hostname.sh
+
+root@dmytro:~# cat /home/bob/ch_hostname.sh
+#!/bin/bash
+sudo hostnamectl set-hostname ubuntu22
+
+root@dmytro:~#reboot
+
+
+Last login: Thu Apr 17 13:49:50 2025 from 192.168.0.104
+bob@ubuntu22:~$ hostname
+ubuntu22
+bob@ubuntu22:~$
+
+bob@ubuntu22:~$ sudo apt update
+[sudo] password for bob:
+Hit:1 http://ua.archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://ua.archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:3 http://ua.archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+63 packages can be upgraded. Run 'apt list --upgradable' to see them.
+bob@ubuntu22:~$ sudo apt install nginx -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+nginx is already the newest version (1.24.0-2ubuntu7.3).
+0 upgraded, 0 newly installed, 0 to remove and 63 not upgraded.
+
+bob@ubuntu22:~$ systemctl status nginx
+
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2025-04-17 13:53:01 UTC; 5min ago
+       Docs: man:nginx(8)
+    Process: 705 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 732 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 751 (nginx)
+      Tasks: 2 (limit: 2272)
+     Memory: 3.0M (peak: 3.2M)
+        CPU: 78ms
+     CGroup: /system.slice/nginx.service
+             ├─751 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             └─752 "nginx: worker process"
+
+Warning: some journal files were not opened due to insufficient permissions.
+
+bob@ubuntu22:~$ sudo apt install net-tools -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+net-tools is already the newest version (2.10-0.1ubuntu4).
+0 upgraded, 0 newly installed, 0 to remove and 63 not upgraded.
+
+
+bob@ubuntu22:~$ sudo netstat -tulnp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      567/systemd-resolve
+tcp        0      0 127.0.0.54:53           0.0.0.0:*               LISTEN      567/systemd-resolve
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      751/nginx: master p
+tcp6       0      0 :::22                   :::*                    LISTEN      1/init
+tcp6       0      0 :::80                   :::*                    LISTEN      751/nginx: master p
+udp        0      0 127.0.0.54:53           0.0.0.0:*                           567/systemd-resolve
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           567/systemd-resolve
+udp        0      0 192.168.0.103:68        0.0.0.0:*                           548/systemd-network
+bob@ubuntu22:~$
