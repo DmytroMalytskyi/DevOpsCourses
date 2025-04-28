@@ -1,0 +1,13 @@
+[Unit]
+Description=Watch ~/watch directory for new files
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/dmytro/watch_dir.sh
+Restart=always
+User=dmytro
+Environment=HOME=/home/dmytro
+
+[Install]
+WantedBy=multi-user.target
