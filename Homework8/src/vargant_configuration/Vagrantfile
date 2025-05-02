@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config|
+  # We are using the official Ubuntu 22.04 image
+  config.vm.box = "ubuntu/jammy64"
+
+  # Configuring a public network (select the interface at startup)
+  config.vm.network "public_network"
+
+  # Provision: install nginx and change the port to 82
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y nginx
+
+    # Changing port from 80 to 82 in nginx configuration
+    sudo sed -i 's/listen 80 default_server;/listen 82 default_server;/' /etc/nginx/sites-available/default
+    sudo sed -i 's/listen \\[::\\]:80 default_server;/listen [::]:82 default_server;/' /etc/nginx/sites-available/default
+
+    # (Optional) replace the default page
+    echo '<!DOCTYPE html>
+    <html>
+    <head><title>Hello from nginx :)</title></head>
+    <body><h1>Successfully started nginx on port 82!</h1></body>
+    </html>' | sudo tee /var/www/html/index.nginx-debian.html
+
+    # Rebbot nginx
+    sudo systemctl restart nginx
+  SHELL
+end
