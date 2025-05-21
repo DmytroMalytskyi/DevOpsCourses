@@ -1,0 +1,49 @@
+Vagrant.configure("2") do |config|
+  
+  # Checking environment variables on the host
+  required_env_vars = %w[DB_USER DB_PASS DB_NAME DB_HOST DB_PORT]
+  missing_vars = required_env_vars.select { |var| ENV[var].nil? }
+
+  if missing_vars.any?
+    abort "Error: Missing environment variables: #{missing_vars.join(', ')}. Set them before running Vagrant."
+  end
+
+  # --- Configurate DB_VM ---
+  config.vm.define "db_vm" do |db|
+    db.vm.box = "ubuntu/jammy64"
+    db.vm.hostname = "db.vm"
+    db.vm.network "private_network", ip: ENV['DB_HOST']
+    db.vm.provision "shell", path: "provision/db_provision.sh",
+      env: {
+        "DB_USER" => ENV['DB_USER'],
+        "DB_PASS" => ENV['DB_PASS'],
+        "DB_NAME" => ENV['DB_NAME'],
+        "DB_HOST" => ENV['DB_HOST'],
+        "DB_PORT" => ENV['DB_PORT']
+      }
+	db.vm.provider "virtualbox" do |vb|
+		vb.name = "PetClinic_DB_VM"
+		vb.memory = "1024"
+    end
+  end
+
+  # --- Configurate APP_VM ---
+  config.vm.define "app_vm" do |app|
+    app.vm.box = "ubuntu/jammy64"
+    app.vm.hostname = "app.vm"
+    app.vm.network "private_network", ip: "192.168.56.11"
+    app.vm.network "forwarded_port", guest: 8080, host: 8080
+    app.vm.provision "shell", path: "provision/app_provision.sh",
+      env: {
+        "DB_USER" => ENV['DB_USER'],
+        "DB_PASS" => ENV['DB_PASS'],
+        "DB_NAME" => ENV['DB_NAME'],
+        "DB_HOST" => ENV['DB_HOST'],
+        "DB_PORT" => ENV['DB_PORT']
+      }
+	app.vm.provider "virtualbox" do |vb|
+		vb.name = "PetClinic_App_VM"
+		vb.memory = "1024"
+    end
+  end
+end
