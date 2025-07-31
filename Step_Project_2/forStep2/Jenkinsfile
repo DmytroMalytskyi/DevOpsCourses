@@ -1,17 +1,17 @@
 pipeline {
     agent {
-        label 'worker'
+        label 'worker' // або інший label, якщо твій агент має іншу назву
     }
 
     environment {
         IMAGE_NAME = 'dmytrro/test-nodejs-app'
-        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds' // Назва Jenkins Credentials
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/DmytroMalytskyi/DevOpsCourses.git'
+                git 'https://github.com/DmytroMalytskyi/DevOpsCourses.git'
             }
         }
 
@@ -19,7 +19,7 @@ pipeline {
             steps {
                 dir('Step_Project_2/forStep2') {
                     script {
-                        env.WORKDIR = pwd()
+                        echo "Switched to project directory"
                     }
                 }
             }
@@ -27,7 +27,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                dir("${env.WORKDIR}") {
+                dir('Step_Project_2/forStep2') {
                     sh 'docker build -t $IMAGE_NAME .'
                 }
             }
@@ -35,9 +35,9 @@ pipeline {
 
         stage('Run Tests in Container') {
             steps {
-                dir("${env.WORKDIR}") {
+                dir('Step_Project_2/forStep2') {
                     script {
-                        def result = sh(script: 'docker run --rm $IMAGE_NAME npm test', returnStatus: true)
+                        def result = sh(script: 'docker run --rm --entrypoint "" $IMAGE_NAME npm test', returnStatus: true)
                         if (result != 0) {
                             error("Tests failed")
                         }
@@ -63,7 +63,10 @@ pipeline {
 
     post {
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo '❌ Pipeline failed. Check logs for errors.'
+        }
+        success {
+            echo '✅ Pipeline completed successfully.'
         }
     }
 }
