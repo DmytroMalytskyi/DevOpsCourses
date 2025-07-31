@@ -1,56 +1,50 @@
 pipeline {
-    agent { label 'worker' }
-    environment {
-        PATH = "/usr/bin:${env.PATH}"
-    }
+    agent none
+
     stages {
-        stage('Debug environment') {
-            steps {
-                sh 'echo "PATH=$PATH"'
-                sh '/usr/bin/docker --version'
-            }
-        }
         stage('Checkout SCM') {
+            agent { label 'jenkins-worker' }
             steps {
                 checkout scm
             }
         }
+
         stage('Build Docker Image') {
+            agent { label 'jenkins-worker' }
             steps {
                 dir('Step_Project_2/forStep2') {
                     sh '/usr/bin/docker build -t dmytrro/test-nodejs-app .'
                 }
             }
         }
+
         stage('Run Tests in Container') {
+            agent { label 'jenkins-worker' }
             steps {
-                dir('Step_Project_2/forStep2') {
-                    sh '/usr/bin/docker run --rm dmytrro/test-nodejs-app npm test'
-                }
+                sh '/usr/bin/docker run --rm dmytrro/test-nodejs-app npm test'
             }
         }
+
         stage('Login to DockerHub') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+            agent { label 'jenkins-worker' }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | /usr/bin/docker login -u $DOCKER_USER --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '/usr/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
                 }
             }
         }
+
         stage('Push Docker Image') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+            agent { label 'jenkins-worker' }
             steps {
                 sh '/usr/bin/docker push dmytrro/test-nodejs-app'
             }
         }
     }
+
     post {
         failure {
-            echo 'Pipeline failed. Будь ласка, перевір логи.'
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
