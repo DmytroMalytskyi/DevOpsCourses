@@ -13,7 +13,7 @@ pipeline {
             agent { label 'worker' }
             steps {
                 dir('Step_Project_2/forStep2') {
-                    sh '/usr/bin/docker build -t dmytrro/test-nodejs-app .'
+                    sh '/usr/bin/docker build -t fcfstov/test-nodejs-app .'
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
         stage('Run Tests in Container') {
             agent { label 'worker' }
             steps {
-                sh '/usr/bin/docker run --rm dmytrro/test-nodejs-app npm test'
+                sh '/usr/bin/docker run --rm fcfstov/test-nodejs-app npm test'
             }
         }
 
@@ -37,7 +37,7 @@ pipeline {
         stage('Push Docker Image') {
             agent { label 'worker' }
             steps {
-                sh '/usr/bin/docker push dmytrro/test-nodejs-app'
+                sh '/usr/bin/docker push fcfstov/test-nodejs-app'
             }
         }
     }
