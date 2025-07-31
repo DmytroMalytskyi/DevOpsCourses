@@ -1,10 +1,17 @@
 pipeline {
-    agent any
+    agent { label 'worker' }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Check Docker') {
+            steps {
+                sh 'docker --version'
+                sh 'docker ps'
             }
         }
 
@@ -19,7 +26,6 @@ pipeline {
         stage('Run Tests in Container') {
             steps {
                 dir('Step_Project_2/forStep2') {
-                    // Запускаємо тест командою npm test всередині контейнера
                     sh 'docker run --rm dmytrro/test-nodejs-app npm test'
                 }
             }
@@ -31,7 +37,7 @@ pipeline {
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
@@ -48,7 +54,7 @@ pipeline {
 
     post {
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo 'Pipeline failed. Please перевірте логи.'
         }
     }
 }
