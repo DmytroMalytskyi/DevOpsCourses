@@ -8,17 +8,10 @@ pipeline {
             }
         }
 
-        stage('Check Docker') {
-            steps {
-                sh 'docker --version'
-                sh 'docker ps'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 dir('Step_Project_2/forStep2') {
-                    sh 'docker build -t dmytrro/test-nodejs-app .'
+                    sh '/usr/bin/docker build -t dmytrro/test-nodejs-app .'
                 }
             }
         }
@@ -26,7 +19,7 @@ pipeline {
         stage('Run Tests in Container') {
             steps {
                 dir('Step_Project_2/forStep2') {
-                    sh 'docker run --rm dmytrro/test-nodejs-app npm test'
+                    sh '/usr/bin/docker run --rm dmytrro/test-nodejs-app npm test'
                 }
             }
         }
@@ -37,7 +30,7 @@ pipeline {
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    sh 'echo $DOCKER_PASS | /usr/bin/docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
@@ -47,14 +40,14 @@ pipeline {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh 'docker push dmytrro/test-nodejs-app'
+                sh '/usr/bin/docker push dmytrro/test-nodejs-app'
             }
         }
     }
 
     post {
         failure {
-            echo 'Pipeline failed. Please перевірте логи.'
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
