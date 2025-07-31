@@ -3,14 +3,14 @@ pipeline {
 
     stages {
         stage('Checkout SCM') {
-            agent { label 'jenkins-worker' }
+            agent { label 'worker' }
             steps {
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
-            agent { label 'jenkins-worker' }
+            agent { label 'worker' }
             steps {
                 dir('Step_Project_2/forStep2') {
                     sh '/usr/bin/docker build -t dmytrro/test-nodejs-app .'
@@ -19,14 +19,14 @@ pipeline {
         }
 
         stage('Run Tests in Container') {
-            agent { label 'jenkins-worker' }
+            agent { label 'worker' }
             steps {
                 sh '/usr/bin/docker run --rm dmytrro/test-nodejs-app npm test'
             }
         }
 
         stage('Login to DockerHub') {
-            agent { label 'jenkins-worker' }
+            agent { label 'worker' }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '/usr/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
@@ -35,7 +35,7 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            agent { label 'jenkins-worker' }
+            agent { label 'worker' }
             steps {
                 sh '/usr/bin/docker push dmytrro/test-nodejs-app'
             }
