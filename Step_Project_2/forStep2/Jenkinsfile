@@ -1,17 +1,16 @@
 pipeline {
-    agent {
-        label 'worker' // або інший label, якщо твій агент має іншу назву
-    }
+    agent { label 'worker' }
 
     environment {
         IMAGE_NAME = 'dmytrro/test-nodejs-app'
-        DOCKER_CREDENTIALS_ID = 'dockerhub-creds' // Назва Jenkins Credentials
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+        BRANCH_NAME = "${env.GIT_BRANCH ?: 'unknown'}"
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/DmytroMalytskyi/DevOpsCourses.git'
+                git branch: 'main', url: 'https://github.com/DmytroMalytskyi/DevOpsCourses.git'
             }
         }
 
@@ -19,7 +18,7 @@ pipeline {
             steps {
                 dir('Step_Project_2/forStep2') {
                     script {
-                        echo "Switched to project directory"
+                        echo "Moved to $(pwd)"
                     }
                 }
             }
@@ -37,9 +36,9 @@ pipeline {
             steps {
                 dir('Step_Project_2/forStep2') {
                     script {
-                        def result = sh(script: 'docker run --rm --entrypoint "" $IMAGE_NAME npm test', returnStatus: true)
+                        def result = sh(script: 'docker run --rm $IMAGE_NAME npm test', returnStatus: true)
                         if (result != 0) {
-                            error("Tests failed")
+                            error("❌ Tests failed.")
                         }
                     }
                 }
@@ -47,6 +46,9 @@ pipeline {
         }
 
         stage('Login to DockerHub') {
+            when {
+                branch 'main'
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
@@ -55,6 +57,9 @@ pipeline {
         }
 
         stage('Push Docker Image') {
+            when {
+                branch 'main'
+            }
             steps {
                 sh 'docker push $IMAGE_NAME'
             }
@@ -63,7 +68,7 @@ pipeline {
 
     post {
         failure {
-            echo '❌ Pipeline failed. Check logs for errors.'
+            echo '❌ Pipeline failed. Please check logs above.'
         }
         success {
             echo '✅ Pipeline completed successfully.'
