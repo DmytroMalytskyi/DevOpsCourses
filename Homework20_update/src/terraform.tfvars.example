@@ -1,0 +1,4 @@
+name               = "dmytro"
+list_of_open_ports = [22, 80]
+key_name           = "my-keypair"
+
