@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "{{ http_port }}:80"
+{% if mount_html %}
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+{% endif %}
