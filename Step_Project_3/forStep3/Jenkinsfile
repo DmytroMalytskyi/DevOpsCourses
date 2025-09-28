@@ -1,50 +1,42 @@
+
 pipeline {
-    agent none
-
-    stages {
-        stage('Checkout SCM') {
-            agent { label 'worker' }
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build Docker Image') {
-            agent { label 'worker' }
-            steps {
-                dir('Step_Project_2/forStep2') {
-                    sh '/usr/bin/docker build -t fcfstov/test-nodejs-app .'
-                }
-            }
-        }
-
-        stage('Run Tests in Container') {
-            agent { label 'worker' }
-            steps {
-                sh '/usr/bin/docker run --rm fcfstov/test-nodejs-app npm test'
-            }
-        }
-
-        stage('Login to DockerHub') {
-            agent { label 'worker' }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '/usr/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            agent { label 'worker' }
-            steps {
-                sh '/usr/bin/docker push fcfstov/test-nodejs-app'
-            }
-        }
+  agent any
+  environment {
+    DOCKERHUB = credentials('dockerhub')
+    IMAGE = "fcfstov/test-nodejs-app"
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
-
-    post {
-        failure {
-            echo 'Pipeline failed. Please check the logs.'
-        }
+    stage('Build') {
+      steps {
+        sh 'docker build -t $IMAGE:${BUILD_NUMBER} -t $IMAGE:latest ./forStep3'
+      }
     }
+    stage('Test') {
+      steps {
+        sh 'docker run --rm $IMAGE:${BUILD_NUMBER} npm test || true'
+      }
+    }
+    stage('Push') {
+      steps {
+        sh 'echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin'
+        sh 'docker push $IMAGE:${BUILD_NUMBER}'
+        sh 'docker push $IMAGE:latest'
+      }
+    }
+    stage('Deploy on worker') {
+      agent { label 'worker' }
+      steps {
+        sh '''
+          docker rm -f app || true
+          docker pull $IMAGE:latest
+          docker run -d --name app -p 3000:3000 $IMAGE:latest
+        '''
+      }
+    }
+  }
 }
