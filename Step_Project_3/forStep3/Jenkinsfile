@@ -1,0 +1,50 @@
+pipeline {
+    agent none
+
+    stages {
+        stage('Checkout SCM') {
+            agent { label 'worker' }
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            agent { label 'worker' }
+            steps {
+                dir('Step_Project_2/forStep2') {
+                    sh '/usr/bin/docker build -t fcfstov/test-nodejs-app .'
+                }
+            }
+        }
+
+        stage('Run Tests in Container') {
+            agent { label 'worker' }
+            steps {
+                sh '/usr/bin/docker run --rm fcfstov/test-nodejs-app npm test'
+            }
+        }
+
+        stage('Login to DockerHub') {
+            agent { label 'worker' }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '/usr/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            agent { label 'worker' }
+            steps {
+                sh '/usr/bin/docker push fcfstov/test-nodejs-app'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
+        }
+    }
+}
