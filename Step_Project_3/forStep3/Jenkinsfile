@@ -2,35 +2,52 @@
 pipeline {
   agent any
   environment {
-    DOCKERHUB = credentials('dockerhub')
+    DOCKERHUB = credentials('dockerhub')   // Jenkins credential ID
     IMAGE = "fcfstov/test-nodejs-app"
   }
+
   stages {
     stage('Checkout') {
       steps {
+        echo "📦 Cloning repository..."
         checkout scm
+        sh 'ls -la Step_Project_3/forStep3'  // Debug: переконайся, що папка є
       }
     }
+
     stage('Build') {
       steps {
-        sh 'docker build -t $IMAGE:${BUILD_NUMBER} -t $IMAGE:latest ./forStep3'
+        echo "🏗️ Building Docker image..."
+        sh '''
+          docker build -t $IMAGE:${BUILD_NUMBER} -t $IMAGE:latest ./Step_Project_3/forStep3
+        '''
       }
     }
+
     stage('Test') {
       steps {
-        sh 'docker run --rm $IMAGE:${BUILD_NUMBER} npm test || true'
+        echo "🧪 Running tests..."
+        sh '''
+          docker run --rm $IMAGE:${BUILD_NUMBER} npm test || true
+        '''
       }
     }
+
     stage('Push') {
       steps {
-        sh 'echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin'
-        sh 'docker push $IMAGE:${BUILD_NUMBER}'
-        sh 'docker push $IMAGE:latest'
+        echo "📤 Pushing image to DockerHub..."
+        sh '''
+          echo "$DOCKERHUB_PSW" | docker login -u "$DOCKERHUB_USR" --password-stdin
+          docker push $IMAGE:${BUILD_NUMBER}
+          docker push $IMAGE:latest
+        '''
       }
     }
+
     stage('Deploy on worker') {
       agent { label 'worker' }
       steps {
+        echo "🚀 Deploying on worker..."
         sh '''
           docker rm -f app || true
           docker pull $IMAGE:latest
@@ -39,4 +56,14 @@ pipeline {
       }
     }
   }
+
+  post {
+    success {
+      echo "✅ Deployment successful!"
+    }
+    failure {
+      echo "❌ Build failed! Check logs."
+    }
+  }
 }
+
