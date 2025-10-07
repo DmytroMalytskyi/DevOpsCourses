@@ -3,7 +3,7 @@ pipeline {
   agent any
   environment {
     DOCKERHUB = credentials('dockerhub')   // Jenkins credential ID
-    IMAGE = "fcfstov/test-nodejs-app"
+    IMAGE = "dmytrro/test-nodejs-app"
   }
 
   stages {
