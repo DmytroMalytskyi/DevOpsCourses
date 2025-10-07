@@ -45,7 +45,7 @@ pipeline {
     }
 
     stage('Deploy on worker') {
-      agent { label 'worker' }
+      agent { label 'linux' }
       steps {
         echo "🚀 Deploying on worker..."
         sh '''
