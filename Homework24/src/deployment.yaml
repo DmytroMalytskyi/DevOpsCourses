@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-random-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: python-random
+  template:
+    metadata:
+      labels:
+        app: python-random
+    spec:
+      containers:
+        - name: python-random
+          image: dmytrro/python-random:latest
+          ports:
+            - containerPort: 8082
