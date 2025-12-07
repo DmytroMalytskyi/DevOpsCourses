@@ -1,0 +1,62 @@
+groups:
+  - name: base-alerts
+    rules:
+      - alert: LowDiskSpace
+        expr: |
+          100 * (
+            node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} 
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"}
+          ) < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Мало місця на диску ({{ $labels.instance }} {{ $labels.mountpoint }})"
+          description: "Вільного місця < 15% на {{ $labels.mountpoint }}. Поточне: {{ $value | printf \"%.2f\" }}%."
+
+      - alert: HighCPUUsage
+        expr: |
+          (1 - avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100 > 80
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Високе навантаження CPU ({{ $labels.instance }})"
+          description: "Середнє завантаження CPU > 80% за 5 хв. Поточне: {{ $value | printf \"%.2f\" }}%."
+
+      - alert: TargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Таргет недоступний: {{ $labels.job }} ({{ $labels.instance }})"
+          description: "Prometheus не може збирати метрики з цього таргета."
+
+      - alert: HighMemoryUsage
+        expr: |
+          100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Високе використання оперативної пам'яті ({{ $labels.instance }})"
+          description: "RAM > 90% протягом 10 хвилин."
+
+      - alert: HighLoadAverage
+        expr: node_load1 > count(count(node_cpu_seconds_total) by (cpu))
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Високий load average ({{ $labels.instance }})"
+          description: "Load average за 1 хв > кількості CPU."
+
+      - alert: ContainerRestarting
+        expr: changes(container_last_seen[5m]) > 0
+        for: 2m
+        labels:
+          severity: info
+        annotations:
+          summary: "Контейнер(и) перезапускались ({{ $labels.instance }})"
+          description: "Виявлено перезапуски контейнерів за останні 5 хв."

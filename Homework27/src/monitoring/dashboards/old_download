@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+OUT_DIR="$(dirname "$0")"
+
+download() {
+  local id="$1"
+  local name="$2"
+  echo "Downloading ${name} (id=${id})"
+  curl -fsSL "https://grafana.com/api/dashboards/${id}/revisions/latest/download" -o "${OUT_DIR}/${name}.json"
+}
+
+download 1860  node-exporter-full
+download 14282 cadvisor-container
+download 15172 docker-host-overview
+
+echo "Done. JSON saved to ${OUT_DIR}"
